@@ -1,0 +1,38 @@
+name: Update Zotero CSV
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every Monday
+    - cron: "0 0 * * 1"
+  workflow_dispatch: # Allows manual trigger from the GitHub UI
+
+jobs:
+  update-dataset:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Grants the bot permission to push commits
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch data from Zotero
+        run: python fetch_zotero.py
+
+      - name: Commit and Push CSV
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add zotero_registered_reports.csv
+          
+          # Only commit and push if the CSV has actually changed
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update Zotero dataset" && git push)
