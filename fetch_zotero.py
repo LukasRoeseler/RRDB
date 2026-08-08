@@ -31,13 +31,26 @@ def fetch_and_save_zotero_library():
                     authors.append(c['name'])
             data['authors_flattened'] = "; ".join(authors)
             
-            # Flatten tags
+            # Flatten tags and identify Stage 1 vs Stage 2
             tags = data.get('tags', [])
-            data['tags_flattened'] = ", ".join([t.get('tag', '') for t in tags])
+            tag_strings = [t.get('tag', '') for t in tags]
+            data['tags_flattened'] = ", ".join(tag_strings)
             
-            # Clean up nested fields so they don't break the CSV
+            # Flag if the item is a Stage 1 report based on tags
+            is_stage_1 = any("stage 1" in t.lower() for t in tag_strings)
+            data['is_stage_1'] = is_stage_1
+            
+            # Clean up nested fields so they don't break the CSV structure
             for key in ['creators', 'tags', 'collections', 'relations', 'attachments', 'notes']:
                 data.pop(key, None)
+
+            # FIX: Remove line breaks from string fields (like abstracts, titles, and 'extra')
+            # This ensures stable CSV exports across all software (Excel, Numbers, etc.)
+            for key, value in data.items():
+                if isinstance(value, str):
+                    # Replace newlines/carriage returns with space, and clean up double spaces
+                    clean_string = value.replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ')
+                    data[key] = ' '.join(clean_string.split())
                 
             all_items.append(data)
             
@@ -53,18 +66,27 @@ def fetch_and_save_zotero_library():
         columns.update(item.keys())
         
     sorted_columns = sorted(list(columns))
-    preferred_order = ['itemType', 'title', 'authors_flattened', 'date', 'publicationTitle', 'DOI', 'url']
+    preferred_order = ['itemType', 'title', 'authors_flattened', 'date', 'publicationTitle', 'DOI', 'url', 'is_stage_1', 'tags_flattened']
     final_columns = [col for col in preferred_order if col in sorted_columns] + \
                     [col for col in sorted_columns if col not in preferred_order]
 
-    filename = 'zotero_registered_reports.csv'
-    
-    with open(filename, 'w', newline='', encoding='utf-8') as f:
+    # --- SAVE FIRST CSV (ALL ITEMS) ---
+    filename_all = 'zotero_registered_reports.csv'
+    with open(filename_all, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=final_columns)
         writer.writeheader()
         writer.writerows(all_items)
+    print(f"Successfully saved {len(all_items)} total items to {filename_all}.")
 
-    print(f"Successfully saved {len(all_items)} items to {filename}.")
+    # --- SAVE SECOND CSV (STAGE 2 / EXCLUDING STAGE 1) ---
+    stage_2_items = [item for item in all_items if not item.get('is_stage_1', False)]
+    filename_stage2 = 'zotero_registered_reports_stage2.csv'
+    
+    with open(filename_stage2, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=final_columns)
+        writer.writeheader()
+        writer.writerows(stage_2_items)
+    print(f"Successfully saved {len(stage_2_items)} Stage 2/Non-Stage-1 items to {filename_stage2}.")
 
 if __name__ == "__main__":
     fetch_and_save_zotero_library()
