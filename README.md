@@ -1,6 +1,9 @@
 # RRDB
 Dataset version of the Registered Reports Database for the Open Research Extension
 
+If you use any of this, please cite:
+Montoya, A. K., Krenzer, W. L. D., Buchanan, E. M., Pronizius, E., Wang, Y. A., Morillo, D., … Armstrong, C. (2026, May 14). Database of Published Registered Reports. https://doi.org/10.17605/OSF.IO/VUR72
+
 ## Zotero Registered Reports Tracker
 
 This repository automatically tracks and extracts the ["Registered Reports" Zotero Library](https://www.zotero.org/groups/5937153/registered_reports/library) (Group ID `5937153`) into a clean, easy-to-read CSV format.
