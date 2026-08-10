@@ -49,8 +49,6 @@
             background: #fff;
             border: 1px solid var(--border-color);
             padding: 15px;
-            height: 400px;
-            overflow-y: auto; /* Allows scrolling for horizontal bar charts if needed */
         }
 
         .full-width {
@@ -122,27 +120,24 @@
 
     <h1>Registered Reports Browser</h1>
     <div class="citation">
-        This database tracks and extracts the "Registered Reports" Zotero Library (Group ID 5937153).
+        This database tracks and extracts the "Registered Reports" <a href="https://www.zotero.org/groups/5937153/registered_reports/library" target="_blank" rel="noopener">Zotero Library (Group ID 5937153)</a>.<br>
+        If you use any of this, you must cite: Montoya, A. K., Krenzer, W. L. D., Buchanan, E. M., Pronizius, E., Wang, Y. A., Morillo, D., &hellip; Armstrong, C. (2026, May 14). Database of Published Registered Reports. <a href="https://doi.org/10.17605/OSF.IO/VUR72" target="_blank" rel="noopener">https://doi.org/10.17605/OSF.IO/VUR72</a>
     </div>
 
     <div class="dashboard-grid">
-        <div class="chart-container full-width">
+        <div class="chart-container full-width" style="height: 450px;">
             <h2>Registered Reports Over Time</h2>
             <canvas id="timelineChart"></canvas>
         </div>
-        
-        <div class="chart-container">
+
+        <div class="chart-container" style="height: 1300px;">
             <h2>Top Journals Publishing RRs</h2>
-            <div style="height: 800px;"> <!-- Extra height to allow scrolling -->
-                <canvas id="journalChart"></canvas>
-            </div>
+            <canvas id="journalChart"></canvas>
         </div>
 
-        <div class="chart-container">
+        <div class="chart-container" style="height: 1300px;">
             <h2>Top Authors Publishing RRs</h2>
-            <div style="height: 800px;">
-                <canvas id="authorChart"></canvas>
-            </div>
+            <canvas id="authorChart"></canvas>
         </div>
     </div>
 
@@ -156,8 +151,8 @@
         <table id="dataTable">
             <thead>
                 <tr>
-                    <th onclick="sortTable(0)">Title <span class="sort-icon"></span><select class="column-filter" onchange="filterTable()" onclick="event.stopPropagation()"><option value="">All</option></select></th>
-                    <th onclick="sortTable(1)">Authors <span class="sort-icon"></span><select class="column-filter" onchange="filterTable()" onclick="event.stopPropagation()"><option value="">All</option></select></th>
+                    <th onclick="sortTable(0)">Title <span class="sort-icon"></span></th>
+                    <th onclick="sortTable(1)">Authors <span class="sort-icon"></span></th>
                     <th onclick="sortTable(2)">Date <span class="sort-icon"></span><select class="column-filter" onchange="filterTable()" onclick="event.stopPropagation()"><option value="">All</option></select></th>
                     <th onclick="sortTable(3)">Journal <span class="sort-icon"></span><select class="column-filter" onchange="filterTable()" onclick="event.stopPropagation()"><option value="">All</option></select></th>
                     <th onclick="sortTable(4)">Stage <span class="sort-icon"></span><select class="column-filter" onchange="filterTable()" onclick="event.stopPropagation()"><option value="">All</option></select></th>
@@ -220,8 +215,8 @@
             });
 
             renderTimeline(timelineData);
-            renderHorizontalBar('journalChart', journalCounts, 50); // Show top 50, scrollable
-            renderHorizontalBar('authorChart', authorCounts, 50);
+            renderHorizontalBar('journalChart', journalCounts, 50, '#1baf7a'); // Top 50 journals
+            renderHorizontalBar('authorChart', authorCounts, 50, '#4a3aa7'); // Top 50 authors
             
             populateTable(data);
             populateFilters(data);
@@ -237,8 +232,8 @@
                 data: {
                     labels: years,
                     datasets: [
-                        { label: 'Stage 1', data: stage1, backgroundColor: '#888' },
-                        { label: 'Stage 2 / Other', data: stage2, backgroundColor: '#333' }
+                        { label: 'Stage 1', data: stage1, backgroundColor: '#2a78d6' },
+                        { label: 'Stage 2 / Other', data: stage2, backgroundColor: '#eb6834' }
                     ]
                 },
                 options: {
@@ -253,7 +248,7 @@
             });
         }
 
-        function renderHorizontalBar(canvasId, countObj, limit) {
+        function renderHorizontalBar(canvasId, countObj, limit, color) {
             let sortedArr = Object.entries(countObj).sort((a, b) => b[1] - a[1]).slice(0, limit);
             let labels = sortedArr.map(item => item[0]);
             let data = sortedArr.map(item => item[1]);
@@ -265,7 +260,7 @@
                     datasets: [{
                         label: 'Count',
                         data: data,
-                        backgroundColor: '#555'
+                        backgroundColor: color
                     }]
                 },
                 options: {
@@ -298,14 +293,14 @@
 
         function populateFilters(data) {
             const selects = document.querySelectorAll('.column-filter');
-            // We map the object keys to our 5 table columns
-            const keys = ['title', 'authors_flattened', 'date', 'publicationTitle', 'is_stage_1'];
-            
+            // Filters remain only for Date, Journal, and Stage columns
+            const keys = ['date', 'publicationTitle', 'is_stage_1'];
+
             selects.forEach((select, index) => {
                 let uniqueVals = new Set();
                 data.forEach(row => {
                     let val = row[keys[index]];
-                    if (index === 4) val = val === 'True' ? 'Stage 1' : 'Stage 2';
+                    if (keys[index] === 'is_stage_1') val = val === 'True' ? 'Stage 1' : 'Stage 2';
                     if (val) uniqueVals.add(val.toString().trim());
                 });
 
@@ -323,7 +318,7 @@
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
             const selects = document.querySelectorAll('.column-filter');
             const filters = Array.from(selects).map(s => s.value.toLowerCase());
-            const keys = ['title', 'authors_flattened', 'date', 'publicationTitle', 'is_stage_1'];
+            const keys = ['date', 'publicationTitle', 'is_stage_1'];
 
             filteredData = rawData.filter(row => {
                 // 1. Global text search
@@ -334,7 +329,7 @@
                 for (let i = 0; i < filters.length; i++) {
                     if (!filters[i]) continue;
                     let val = row[keys[i]];
-                    if (i === 4) val = val === 'True' ? 'Stage 1' : 'Stage 2';
+                    if (keys[i] === 'is_stage_1') val = val === 'True' ? 'Stage 1' : 'Stage 2';
                     if ((val || '').toString().toLowerCase() !== filters[i]) return false;
                 }
                 return true;

@@ -36,8 +36,17 @@ def fetch_and_save_zotero_library():
             tag_strings = [t.get('tag', '') for t in tags]
             data['tags_flattened'] = ", ".join(tag_strings)
             
-            # Flag if the item is a Stage 1 report based on tags
-            is_stage_1 = any("stage 1" in t.lower() for t in tag_strings)
+            # Flag if the item is a Stage 1 report based on tags.
+            # Tags like "Stage 1 Linked" / "Stage 1 Not Found" describe a Stage 2
+            # manuscript's relationship to its companion Stage 1 protocol - they
+            # do NOT mean the item itself is Stage 1, so they must be checked
+            # before the generic "stage 1" substring match.
+            tags_lower = [t.lower() for t in tag_strings]
+            is_stage_2_indicator = any(
+                "stage 2 manuscript" in t or "stage 1 linked" in t or "stage 1 not found" in t
+                for t in tags_lower
+            )
+            is_stage_1 = False if is_stage_2_indicator else any("stage 1" in t for t in tags_lower)
             data['is_stage_1'] = is_stage_1
             
             # Clean up nested fields so they don't break the CSV structure
