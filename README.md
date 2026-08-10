@@ -1,7 +1,7 @@
 # RRDB
-Dataset version of the Registered Reports Database for the Open Research Extension
+Dataset version of the Registered Reports Database for the Open Research Extension. I am not a contributor of the database but merely interested in exploring the data and using it for other tools.
 
-If you use any of this, please cite:
+*If you use any of this, you must cite:*
 Montoya, A. K., Krenzer, W. L. D., Buchanan, E. M., Pronizius, E., Wang, Y. A., Morillo, D., … Armstrong, C. (2026, May 14). Database of Published Registered Reports. https://doi.org/10.17605/OSF.IO/VUR72
 
 ## Zotero Registered Reports Tracker
