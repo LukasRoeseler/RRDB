@@ -49,6 +49,19 @@
             background: #fff;
             border: 1px solid var(--border-color);
             padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container h2 {
+            flex: 0 0 auto;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            flex: 1 1 auto;
+            min-height: 0;
         }
 
         .full-width {
@@ -125,19 +138,19 @@
     </div>
 
     <div class="dashboard-grid">
-        <div class="chart-container full-width" style="height: 450px;">
+        <div class="chart-container full-width" style="height: 480px;">
             <h2>Registered Reports Over Time</h2>
-            <canvas id="timelineChart"></canvas>
+            <div class="chart-canvas-wrap"><canvas id="timelineChart"></canvas></div>
         </div>
 
-        <div class="chart-container" style="height: 1300px;">
-            <h2>Top Journals Publishing RRs</h2>
-            <canvas id="journalChart"></canvas>
+        <div class="chart-container" style="height: 700px;">
+            <h2>Top 20 Journals Publishing RRs</h2>
+            <div class="chart-canvas-wrap"><canvas id="journalChart"></canvas></div>
         </div>
 
-        <div class="chart-container" style="height: 1300px;">
-            <h2>Top Authors Publishing RRs</h2>
-            <canvas id="authorChart"></canvas>
+        <div class="chart-container" style="height: 700px;">
+            <h2>Top 20 Authors Publishing RRs</h2>
+            <div class="chart-canvas-wrap"><canvas id="authorChart"></canvas></div>
         </div>
     </div>
 
@@ -215,8 +228,8 @@
             });
 
             renderTimeline(timelineData);
-            renderHorizontalBar('journalChart', journalCounts, 50, '#1baf7a'); // Top 50 journals
-            renderHorizontalBar('authorChart', authorCounts, 50, '#4a3aa7'); // Top 50 authors
+            renderHorizontalBar('journalChart', journalCounts, 20, '#1baf7a'); // Top 20 journals
+            renderHorizontalBar('authorChart', authorCounts, 20, '#4a3aa7'); // Top 20 authors
             
             populateTable(data);
             populateFilters(data);
@@ -250,7 +263,8 @@
 
         function renderHorizontalBar(canvasId, countObj, limit, color) {
             let sortedArr = Object.entries(countObj).sort((a, b) => b[1] - a[1]).slice(0, limit);
-            let labels = sortedArr.map(item => item[0]);
+            // Rank number prefixed to each label so e.g. "#10" is easy to spot on the axis
+            let labels = sortedArr.map((item, i) => `${i + 1}. ${item[0]}`);
             let data = sortedArr.map(item => item[1]);
 
             new Chart(document.getElementById(canvasId), {
@@ -267,7 +281,17 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => items[0].label.replace(/^\d+\.\s/, '')
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { precision: 0 } }
+                    }
                 }
             });
         }
